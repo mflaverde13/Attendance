@@ -9,12 +9,31 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 40px 20px;
+      max-width: 700px;
+      margin: auto;
+    }
+    .box {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px 18px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    .small {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.5;
     }
   </style>
 </head>
 <body>
   <h2>Getting your location...</h2>
-  <p>Please allow location access to continue.</p>
+  <div id="status" class="box">Preparing attendance form...</div>
 
   <script>
     const jobSite = "FIFA_IBC";
@@ -22,14 +41,15 @@
     const formBase =
       "https://docs.google.com/forms/d/e/1FAIpQLSf2AZWEs5ol805qQ4J10YPc9Z0FWjDYgfT4Ei8QTin_mx5PqA/viewform?usp=pp_url";
 
-    const entryEmployeeID = "entry.1790897034";
     const entryJobSite = "entry.2092010849";
     const entryGPS = "entry.148691752";
-    const entryRegisterType = "entry.2099232522";
 
-    function goToForm(lat, lon) {
+    function show(html) {
+      document.getElementById("status").innerHTML = html;
+    }
+
+    function openForm(lat, lon) {
       const gps = lat + "," + lon;
-
       const url =
         formBase +
         "&" + entryJobSite + "=" + encodeURIComponent(jobSite) +
@@ -38,32 +58,51 @@
       window.location.href = url;
     }
 
-    function showError(message) {
-      document.body.innerHTML =
-        "<h2>Unable to get location</h2><p>" + message + "</p>";
-    }
+    function requestLocation() {
+      show("Requesting GPS location...");
 
-    if (!navigator.geolocation) {
-      showError("This device does not support geolocation.");
-    } else {
+      if (!navigator.geolocation) {
+        show("<b>This browser does not support geolocation.</b>");
+        return;
+      }
+
       navigator.geolocation.getCurrentPosition(
         function(position) {
-          goToForm(position.coords.latitude, position.coords.longitude);
+          openForm(position.coords.latitude, position.coords.longitude);
         },
         function(error) {
-          let msg = "Location permission is required to register attendance.";
-          if (error.code === 1) msg = "Location permission was denied.";
-          if (error.code === 2) msg = "Location is unavailable.";
-          if (error.code === 3) msg = "Location request timed out.";
-          showError(msg);
+          let message = "<b>Could not get your location.</b><br><br>";
+
+          if (error.code === 1) {
+            message += "Permission was denied by the browser.";
+          } else if (error.code === 2) {
+            message += "Location is unavailable.";
+          } else if (error.code === 3) {
+            message += "Location request timed out.";
+          } else {
+            message += "Unknown geolocation error.";
+          }
+
+          message += `
+            <div class="small">
+              <br>Please try again.
+            </div>
+            <button onclick="requestLocation()">Try Again</button>
+          `;
+
+          show(message);
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 20000,
           maximumAge: 0
         }
       );
     }
+
+    window.onload = function() {
+      setTimeout(requestLocation, 500);
+    };
   </script>
 </body>
 </html>
