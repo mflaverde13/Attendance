@@ -34,7 +34,17 @@
       margin-top: 12px;
     }
   </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2c3e50">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Attendance">
+  <link rel="apple-touch-icon" href="icon-192.png">
 </head>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
 <body>
   <h2>Attendance Check-In</h2>
 
