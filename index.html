@@ -3,58 +3,196 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Attendance Check-In</title>
+  <title>Attendance</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2c3e50" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Attendance" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+
   <style>
+    :root {
+      --primary: #2c3e50;
+      --primary-hover: #1f2d3a;
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #1f2933;
+      --muted: #6b7280;
+      --border: #d9e2ec;
+      --success: #1f9d55;
+      --error: #c81e1e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
+      margin: 0;
       font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 40px 20px;
-      max-width: 700px;
-      margin: auto;
+      background: var(--bg);
+      color: var(--text);
     }
-    .box {
-      border: 1px solid #ccc;
-      border-radius: 12px;
+
+    .wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 24px;
-      margin-top: 20px;
     }
-    button {
-      padding: 12px 20px;
-      font-size: 18px;
-      cursor: pointer;
-      margin-top: 15px;
-      border-radius: 10px;
-      border: 1px solid #999;
-      background: #f5f5f5;
+
+    .card {
+      width: 100%;
+      max-width: 460px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 22px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+      text-align: center;
     }
-    .small {
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      color: var(--primary);
+    }
+
+    .subtitle {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .site {
+      display: inline-block;
+      margin-bottom: 18px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #eef2f7;
+      color: var(--primary);
+      font-weight: bold;
       font-size: 14px;
-      color: #555;
+    }
+
+    .btn {
+      display: inline-block;
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 15px 18px;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s ease;
+      margin-top: 10px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn[hidden] {
+      display: none !important;
+    }
+
+    .status {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      text-align: left;
+      font-size: 14px;
       line-height: 1.5;
-      margin-top: 12px;
+    }
+
+    .status strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .ok {
+      color: var(--success);
+    }
+
+    .bad {
+      color: var(--error);
+    }
+
+    .small {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 3px solid #dbe2ea;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#2c3e50">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Attendance">
-  <link rel="apple-touch-icon" href="icon-192.png">
 </head>
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
-}
-</script>
 <body>
-  <h2>Attendance Check-In</h2>
+  <div class="wrap">
+    <div class="card">
+      <h1>Attendance</h1>
+      <p class="subtitle">
+        Register your attendance with GPS verification.
+      </p>
 
-  <div id="status" class="box">
-    Tap the button below to register your attendance.
-    <br>
-    <button onclick="requestLocation()">Start Check-In</button>
+      <div class="site" id="jobSiteBadge">Job Site: FIFA_IBC</div>
+
+      <button id="startBtn" class="btn btn-primary" type="button">
+        Start Check-In
+      </button>
+
+      <button id="installBtn" class="btn btn-secondary" type="button" hidden>
+        Install App
+      </button>
+
+      <div id="status" class="status">
+        <strong>Ready</strong>
+        Tap <b>Start Check-In</b> to continue.
+      </div>
+
+      <div class="small">
+        iPhone: after opening this page in Safari, you can use
+        <b>Agregar a inicio</b>.<br>
+        Android: use Chrome menu and choose <b>Install app</b> or
+        <b>Add to Home screen</b>.
+      </div>
+    </div>
   </div>
 
   <script>
+    // ===== CONFIGURATION =====
     const jobSite = "FIFA_IBC";
 
     const formBase =
@@ -62,61 +200,78 @@ if ("serviceWorker" in navigator) {
 
     const entryJobSite = "entry.2092010849";
     const entryGPS = "entry.148691752";
+    // =========================
 
-    function show(html) {
-      document.getElementById("status").innerHTML = html;
+    const statusBox = document.getElementById("status");
+    const startBtn = document.getElementById("startBtn");
+    const installBtn = document.getElementById("installBtn");
+    const jobSiteBadge = document.getElementById("jobSiteBadge");
+
+    let deferredPrompt = null;
+
+    jobSiteBadge.textContent = "Job Site: " + jobSite;
+
+    function setStatus(title, message, type = "") {
+      const cls = type === "error" ? "bad" : type === "success" ? "ok" : "";
+      statusBox.innerHTML = `
+        <strong class="${cls}">${title}</strong>
+        ${message}
+      `;
     }
 
-    function openForm(lat, lon) {
+    function buildFormUrl(lat, lon) {
       const gps = lat + "," + lon;
-
-      const url =
+      return (
         formBase +
         "&" + entryJobSite + "=" + encodeURIComponent(jobSite) +
-        "&" + entryGPS + "=" + encodeURIComponent(gps);
+        "&" + entryGPS + "=" + encodeURIComponent(gps)
+      );
+    }
 
+    function goToForm(lat, lon) {
+      const url = buildFormUrl(lat, lon);
       window.location.href = url;
     }
 
     function requestLocation() {
-      show(`
-        Getting your location...
-        <div class="small">Please allow location access if prompted.</div>
-      `);
-
       if (!navigator.geolocation) {
-        show(`
-          <b>This browser does not support geolocation.</b>
-          <br><button onclick="requestLocation()">Try Again</button>
-        `);
+        setStatus(
+          "Geolocation not available",
+          "This device or browser does not support location services.",
+          "error"
+        );
         return;
       }
 
+      setStatus(
+        "Getting location...",
+        `<span class="loading"></span>Please allow location access if prompted.`
+      );
+
       navigator.geolocation.getCurrentPosition(
         function(position) {
-          openForm(position.coords.latitude, position.coords.longitude);
+          setStatus(
+            "Location captured",
+            "Opening attendance form...",
+            "success"
+          );
+          goToForm(position.coords.latitude, position.coords.longitude);
         },
         function(error) {
-          let message = "<b>Could not get your location.</b><br><br>";
+          let message = "Could not get your location.";
 
           if (error.code === 1) {
-            message += "Permission was denied by the browser.";
+            message =
+              "Location permission was denied. Please allow location access and try again.";
           } else if (error.code === 2) {
-            message += "Location is unavailable.";
+            message =
+              "Location is unavailable. Please make sure GPS is enabled and try again.";
           } else if (error.code === 3) {
-            message += "Location request timed out.";
-          } else {
-            message += "Unknown geolocation error.";
+            message =
+              "Location request timed out. Please try again.";
           }
 
-          message += `
-            <div class="small">
-              Tap the button again and allow location access.
-            </div>
-            <button onclick="requestLocation()">Try Again</button>
-          `;
-
-          show(message);
+          setStatus("Location error", message, "error");
         },
         {
           enableHighAccuracy: true,
@@ -124,6 +279,48 @@ if ("serviceWorker" in navigator) {
           maximumAge: 0
         }
       );
+    }
+
+    startBtn.addEventListener("click", requestLocation);
+
+    // Android install prompt
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.hidden = false;
+    });
+
+    installBtn.addEventListener("click", async () => {
+      if (!deferredPrompt) {
+        setStatus(
+          "Install option not available",
+          "Use your browser menu and choose Install app or Add to Home screen."
+        );
+        return;
+      }
+
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.hidden = true;
+    });
+
+    window.addEventListener("appinstalled", () => {
+      installBtn.hidden = true;
+      setStatus(
+        "App installed",
+        "The app was added successfully.",
+        "success"
+      );
+    });
+
+    // Service worker
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js").catch((err) => {
+          console.log("Service worker registration failed:", err);
+        });
+      });
     }
   </script>
 </body>
