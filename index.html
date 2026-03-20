@@ -328,12 +328,9 @@
 
         const response = await fetch(scriptUrl, {
         method: "POST",
-        headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-                  },
+        mode: "no-cors",
         body: JSON.stringify(payload)
         });
-
         const result = await response.json();
 
         if (result.success) {
