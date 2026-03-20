@@ -285,6 +285,7 @@
 
         await fetch(scriptUrl, {
           method: "POST",
+          mode: "no-cors",
           body: formData
         });
 
