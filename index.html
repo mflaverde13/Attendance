@@ -331,23 +331,21 @@
         mode: "no-cors",
         body: JSON.stringify(payload)
         });
-        const result = await response.json();
+        
+        
+ const response = await fetch(scriptUrl, {
+  method: "POST",
+  mode: "no-cors",
+  body: JSON.stringify(payload)
+});
 
-        if (result.success) {
-          setStatus(
-            "Saved",
-            "Attendance registered successfully.",
-            "success"
-          );
-          employeeIdInput.value = "";
-          registerTypeInput.value = "";
-        } else {
-          setStatus(
-            "Error",
-            result.error || "Could not save attendance.",
-            "error"
-          );
-        }
+setStatus(
+  "Saved",
+  "Attendance registered successfully.",
+  "success"
+);
+employeeIdInput.value = "";
+registerTypeInput.value = "";
       } catch (err) {
         setStatus("Error", err.message, "error");
       } finally {
