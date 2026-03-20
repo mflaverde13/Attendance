@@ -1,317 +1,59 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Asistencia v2</title>
+function doGet(e) {
+  return ContentService
+    .createTextOutput("Apps Script activo")
+    .setMimeType(ContentService.MimeType.TEXT);
+}
 
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#20364d">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Attendance">
-  <link rel="apple-touch-icon" href="icon-192.png">
+function doPost(e) {
+  try {
+    Logger.log("=== NUEVA PETICIÓN ===");
 
-  <style>
-    :root{
-      --bg:#f3f5f7;
-      --card:#ffffff;
-      --text:#1d2a35;
-      --muted:#6b7280;
-      --primary:#20364d;
-      --primary-2:#27445f;
-      --border:#d9dee5;
-      --ok-bg:#ecfdf3;
-      --ok-bd:#86efac;
-      --ok-tx:#166534;
-      --err-bg:#fef2f2;
-      --err-bd:#fca5a5;
-      --err-tx:#991b1b;
-      --warn-bg:#eff6ff;
-      --warn-bd:#93c5fd;
-      --warn-tx:#1d4ed8;
+    if (!e) {
+      Logger.log("ERROR: e es null");
+      return ContentService.createTextOutput("NO EVENT");
     }
 
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Arial, Helvetica, sans-serif;
-      background:var(--bg);
-      color:var(--text);
-    }
+    Logger.log("e.parameter: " + JSON.stringify(e.parameter));
 
-    .wrap{
-      max-width:420px;
-      margin:0 auto;
-      padding:20px 14px 40px;
-    }
+    const ss = SpreadsheetApp.openById("1OI-UvI3MasxAn2px0Q_cwp1Q9RWWX2Hn_rr6LHg_zFA");
+    const sheet = ss.getSheetByName("AttendanceLog");
 
-    h1{
-      margin:8px 0 6px;
-      text-align:center;
-      font-size:22px;
-      font-weight:700;
-      color:var(--primary);
-    }
+    Logger.log("Sheet encontrada: " + sheet.getName());
 
-    .subtitle{
-      text-align:center;
-      color:var(--muted);
-      margin:0 0 16px;
-      font-size:14px;
-    }
+    const employeeId = e.parameter.employeeId || "";
+    const registerType = e.parameter.registerType || "";
+    const jobSite = e.parameter.jobSite || "";
+    const latitude = e.parameter.latitude || "";
+    const longitude = e.parameter.longitude || "";
+    const userAgent = e.parameter.userAgent || "";
+    const gps = latitude && longitude ? latitude + "," + longitude : "";
 
-    .badge{
-      display:inline-block;
-      margin:0 auto 14px;
-      padding:10px 14px;
-      border-radius:999px;
-      background:#eef2f7;
-      color:var(--primary);
-      font-weight:700;
-      font-size:14px;
-    }
+    Logger.log("Datos:");
+    Logger.log(employeeId + " | " + registerType + " | " + jobSite);
+    Logger.log(latitude + "," + longitude);
 
-    .center{text-align:center}
+    sheet.appendRow([
+      new Date(),
+      employeeId,
+      registerType,
+      jobSite,
+      gps,
+      latitude,
+      longitude,
+      userAgent
+    ]);
 
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:14px;
-      box-shadow:0 1px 2px rgba(0,0,0,.03);
-    }
+    Logger.log("Fila insertada");
 
-    .field{
-      width:100%;
-      margin-bottom:12px;
-    }
+    return ContentService
+      .createTextOutput("OK")
+      .setMimeType(ContentService.MimeType.TEXT);
 
-    input, select, button{
-      width:100%;
-      border-radius:12px;
-      border:1px solid var(--border);
-      font-size:16px;
-    }
+  } catch (err) {
+    Logger.log("ERROR: " + err.message);
 
-    input, select{
-      padding:14px 14px;
-      background:#fff;
-      color:#111827;
-    }
-
-    button{
-      padding:14px 16px;
-      background:var(--primary);
-      color:#fff;
-      border:none;
-      font-weight:700;
-      cursor:pointer;
-    }
-
-    button:hover{background:var(--primary-2)}
-    button:disabled{
-      opacity:.7;
-      cursor:not-allowed;
-    }
-
-    .status{
-      margin-top:14px;
-      padding:14px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:#fff;
-      line-height:1.4;
-      font-size:14px;
-    }
-
-    .status.ok{
-      background:var(--ok-bg);
-      border-color:var(--ok-bd);
-      color:var(--ok-tx);
-    }
-
-    .status.err{
-      background:var(--err-bg);
-      border-color:var(--err-bd);
-      color:var(--err-tx);
-    }
-
-    .status.warn{
-      background:var(--warn-bg);
-      border-color:var(--warn-bd);
-      color:var(--warn-tx);
-    }
-
-    .small{
-      margin-top:16px;
-      text-align:center;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.5;
-    }
-
-    .hidden{display:none}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <h1>Asistencia v2</h1>
-    <p class="subtitle">Registra tu asistencia con verificación GPS.</p>
-
-    <div class="center">
-      <div class="badge" id="jobSiteBadge">Sitio de empleo: FIFA_IBC</div>
-    </div>
-
-    <div class="card">
-      <form id="attendanceForm">
-        <div class="field">
-          <input
-            id="employeeId"
-            name="employeeId"
-            type="text"
-            placeholder="Employee ID"
-            autocomplete="off"
-            required
-          />
-        </div>
-
-        <div class="field">
-          <select id="registerType" name="registerType" required>
-            <option value="">Seleccione un tipo de registro</option>
-            <option value="Clock In">Clock In</option>
-            <option value="Meal In">Meal In</option>
-            <option value="Meal Out">Meal Out</option>
-            <option value="Clock Out">Clock Out</option>
-          </select>
-        </div>
-
-        <button id="submitBtn" type="submit">Enviar asistencia</button>
-      </form>
-
-      <div id="statusBox" class="status warn">
-        <strong>Listo</strong><br>
-        Ingrese el ID del empleado, elija el tipo de caja registradora y toque <strong>Enviar asistencia</strong>.
-      </div>
-
-      <div class="small">
-        iPhone: usa Safari y opcionalmente <strong>Agregar a inicio</strong>.<br>
-        Android: usa Chrome y opcionalmente <strong>Instalar app</strong>.
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbx3Z4j4hQVxlD9H7w4Fb85tTrl0Hx25uWfs4pM63UIQgTMRiKVOxL-RKSqWyTsC-q5q/exec";
-    const jobSite = "FIFA_IBC";
-
-    const form = document.getElementById("attendanceForm");
-    const employeeIdInput = document.getElementById("employeeId");
-    const registerTypeSelect = document.getElementById("registerType");
-    const submitBtn = document.getElementById("submitBtn");
-    const statusBox = document.getElementById("statusBox");
-    const jobSiteBadge = document.getElementById("jobSiteBadge");
-
-    jobSiteBadge.textContent = "Sitio de empleo: " + jobSite;
-
-    function setStatus(title, message, type) {
-      statusBox.className = "status " + (type || "warn");
-      statusBox.innerHTML = "<strong>" + title + "</strong><br>" + message;
-    }
-
-    function getLocation() {
-      return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-          reject(new Error("Geolocation is not supported on this device."));
-          return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            resolve({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude
-            });
-          },
-          (error) => {
-            let msg = "No fue posible obtener la ubicación.";
-            if (error.code === 1) msg = "Permiso de ubicación denegado.";
-            if (error.code === 2) msg = "Ubicación no disponible.";
-            if (error.code === 3) msg = "La solicitud de ubicación expiró.";
-            reject(new Error(msg));
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 20000,
-            maximumAge: 0
-          }
-        );
-      });
-    }
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const employeeId = employeeIdInput.value.trim();
-      const registerType = registerTypeSelect.value;
-
-      if (!employeeId) {
-        setStatus("Falta ID", "Ingrese el ID del empleado.", "err");
-        return;
-      }
-
-      if (!registerType) {
-        setStatus("Falta tipo", "Seleccione el tipo de registro.", "err");
-        return;
-      }
-
-      if (!scriptUrl || scriptUrl.includes("PEGA_AQUI")) {
-        setStatus("Falta configuración", "Debe pegar la URL publicada de Google Apps Script en index.html.", "err");
-        return;
-      }
-
-      submitBtn.disabled = true;
-      setStatus("Procesando", "Obteniendo ubicación y enviando asistencia...", "warn");
-
-      try {
-        const loc = await getLocation();
-
-        const formData = new FormData();
-        formData.append("employeeId", employeeId);
-        formData.append("registerType", registerType);
-        formData.append("jobSite", jobSite);
-        formData.append("latitude", String(loc.latitude));
-        formData.append("longitude", String(loc.longitude));
-        formData.append("userAgent", navigator.userAgent);
-
-        await fetch(scriptUrl, {
-          method: "POST",
-          mode: "no-cors",
-          body: formData
-        });
-
-        setStatus(
-          "Guardado",
-          "La asistencia fue enviada correctamente.",
-          "ok"
-        );
-
-        form.reset();
-      } catch (err) {
-        setStatus(
-          "Error",
-          err && err.message ? err.message : "No fue posible enviar la asistencia.",
-          "err"
-        );
-      } finally {
-        submitBtn.disabled = false;
-      }
-    });
-
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", function () {
-        navigator.serviceWorker.register("service-worker.js");
-      });
-    }
-  </script>
-</body>
-</html>
+    return ContentService
+      .createTextOutput("ERROR: " + err.message)
+      .setMimeType(ContentService.MimeType.TEXT);
+  }
+}
