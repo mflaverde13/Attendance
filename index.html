@@ -2,74 +2,59 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Test Attendance</title>
+  <title>POST TEST 131</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="font-family: Arial; padding:20px;">
 
-  <h1 style="color:red;">VERSION TEST FORM 124</h1>
-  <p>Prueba directa por formulario HTML a Apps Script</p>
+  <h1 style="color:red;">POST TEST 131</h1>
+  <p>Prueba directa y mínima al Apps Script</p>
 
-  <input id="emp" placeholder="Employee ID" style="width:100%; padding:10px; margin-bottom:10px;" />
+  <form
+    action="https://script.google.com/macros/s/AKfycbwl3WWSGi6WYD7zTUdyP8eHAEZInBGpnyGodJqAYQWn1RgAIRzj7A4pcPjEEA4CBkE6/exec"
+    method="POST"
+    target="_self"
+  >
+    <input
+      name="employeeId"
+      value="TEST131"
+      style="width:100%; padding:10px; margin-bottom:10px;"
+    >
 
-  <select id="type" style="width:100%; padding:10px; margin-bottom:10px;">
-    <option value="Clock In">Clock In</option>
-    <option value="Meal In">Meal In</option>
-    <option value="Meal Out">Meal Out</option>
-    <option value="Clock Out">Clock Out</option>
-  </select>
+    <input
+      name="registerType"
+      value="Clock In"
+      style="width:100%; padding:10px; margin-bottom:10px;"
+    >
 
-  <button onclick="sendForm()" style="width:100%; padding:15px;">
-    ENVIAR
-  </button>
+    <input
+      name="jobSite"
+      value="TEST_SITE"
+      style="width:100%; padding:10px; margin-bottom:10px;"
+    >
 
-  <p id="msg"></p>
+    <input
+      name="latitude"
+      value="1"
+      style="width:100%; padding:10px; margin-bottom:10px;"
+    >
 
-  <form id="postForm"
-        action="https://script.google.com/macros/s/AKfycbwl3WWSGi6WYD7zTUdyP8eHAEZInBGpnyGodJqAYQWn1RgAIRzj7A4pcPjEEA4CBkE6/exec"
-        method="POST"
-        target="hidden_iframe">
-    <input type="hidden" name="employeeId" id="f_employeeId">
-    <input type="hidden" name="registerType" id="f_registerType">
-    <input type="hidden" name="jobSite" id="f_jobSite" value="TEST">
-    <input type="hidden" name="latitude" id="f_latitude">
-    <input type="hidden" name="longitude" id="f_longitude">
-    <input type="hidden" name="userAgent" id="f_userAgent">
+    <input
+      name="longitude"
+      value="2"
+      style="width:100%; padding:10px; margin-bottom:10px;"
+    >
+
+    <input
+      name="userAgent"
+      value="TEST_BROWSER"
+      style="width:100%; padding:10px; margin-bottom:10px;"
+    >
+
+    <button type="submit" style="width:100%; padding:15px;">
+      ENVIAR TEST
+    </button>
   </form>
-
-  <iframe name="hidden_iframe" style="display:none;"></iframe>
-
-<script>
-function sendForm() {
-  const emp = document.getElementById("emp").value.trim();
-  const type = document.getElementById("type").value;
-
-  if (!emp) {
-    document.getElementById("msg").innerHTML = "Falta Employee ID";
-    return;
-  }
-
-  document.getElementById("msg").innerHTML = "Obteniendo GPS...";
-
-  navigator.geolocation.getCurrentPosition(function(pos) {
-    document.getElementById("f_employeeId").value = emp;
-    document.getElementById("f_registerType").value = type;
-    document.getElementById("f_latitude").value = pos.coords.latitude;
-    document.getElementById("f_longitude").value = pos.coords.longitude;
-    document.getElementById("f_userAgent").value = navigator.userAgent;
-
-    document.getElementById("msg").innerHTML = "Enviando formulario...";
-    document.getElementById("postForm").submit();
-
-    setTimeout(function() {
-      document.getElementById("msg").innerHTML = "Formulario enviado. Revisa AttendanceLog.";
-    }, 1500);
-
-  }, function() {
-    document.getElementById("msg").innerHTML = "ERROR GPS";
-  });
-}
-</script>
 
 </body>
 </html>
