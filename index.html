@@ -1,397 +1,314 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Attendance</title>
+  <title>Asistencia v2</title>
 
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#2c3e50" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Attendance" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#20364d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Attendance">
+  <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
-    :root {
-      --primary: #2c3e50;
-      --primary-hover: #1f2d3a;
-      --bg: #f4f6f8;
-      --card: #ffffff;
-      --text: #1f2933;
-      --muted: #6b7280;
-      --border: #d9e2ec;
-      --success: #1f9d55;
-      --error: #c81e1e;
+    :root{
+      --bg:#f3f5f7;
+      --card:#ffffff;
+      --text:#1d2a35;
+      --muted:#6b7280;
+      --primary:#20364d;
+      --primary-2:#27445f;
+      --border:#d9dee5;
+      --ok-bg:#ecfdf3;
+      --ok-bd:#86efac;
+      --ok-tx:#166534;
+      --err-bg:#fef2f2;
+      --err-bd:#fca5a5;
+      --err-tx:#991b1b;
+      --warn-bg:#eff6ff;
+      --warn-bd:#93c5fd;
+      --warn-tx:#1d4ed8;
     }
 
-    * {
-      box-sizing: border-box;
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:var(--bg);
+      color:var(--text);
     }
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+    .wrap{
+      max-width:420px;
+      margin:0 auto;
+      padding:20px 14px 40px;
     }
 
-    .wrap {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+    h1{
+      margin:8px 0 6px;
+      text-align:center;
+      font-size:22px;
+      font-weight:700;
+      color:var(--primary);
     }
 
-    .card {
-      width: 100%;
-      max-width: 460px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px 22px;
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
-      text-align: center;
+    .subtitle{
+      text-align:center;
+      color:var(--muted);
+      margin:0 0 16px;
+      font-size:14px;
     }
 
-    h1 {
-      margin: 0 0 8px;
-      font-size: 28px;
-      color: var(--primary);
+    .badge{
+      display:inline-block;
+      margin:0 auto 14px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:#eef2f7;
+      color:var(--primary);
+      font-weight:700;
+      font-size:14px;
     }
 
-    .subtitle {
-      margin: 0 0 20px;
-      color: var(--muted);
-      font-size: 15px;
-      line-height: 1.45;
+    .center{text-align:center}
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:14px;
+      box-shadow:0 1px 2px rgba(0,0,0,.03);
     }
 
-    .site {
-      display: inline-block;
-      margin-bottom: 18px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: #eef2f7;
-      color: var(--primary);
-      font-weight: bold;
-      font-size: 14px;
+    .field{
+      width:100%;
+      margin-bottom:12px;
     }
 
-    input,
-    select {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      font-size: 16px;
-      box-sizing: border-box;
-      background: #fff;
+    input, select, button{
+      width:100%;
+      border-radius:12px;
+      border:1px solid var(--border);
+      font-size:16px;
     }
 
-    .btn {
-      display: inline-block;
-      width: 100%;
-      border: none;
-      border-radius: 12px;
-      padding: 15px 18px;
-      font-size: 17px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.2s ease;
-      margin-top: 12px;
+    input, select{
+      padding:14px 14px;
+      background:#fff;
+      color:#111827;
     }
 
-    .btn-primary {
-      background: var(--primary);
-      color: #fff;
+    button{
+      padding:14px 16px;
+      background:var(--primary);
+      color:#fff;
+      border:none;
+      font-weight:700;
+      cursor:pointer;
     }
 
-    .btn-primary:hover {
-      background: var(--primary-hover);
+    button:hover{background:var(--primary-2)}
+    button:disabled{
+      opacity:.7;
+      cursor:not-allowed;
     }
 
-    .btn-secondary {
-      background: #fff;
-      color: var(--primary);
-      border: 1px solid var(--border);
+    .status{
+      margin-top:14px;
+      padding:14px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#fff;
+      line-height:1.4;
+      font-size:14px;
     }
 
-    .btn[hidden] {
-      display: none !important;
+    .status.ok{
+      background:var(--ok-bg);
+      border-color:var(--ok-bd);
+      color:var(--ok-tx);
     }
 
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    .status.err{
+      background:var(--err-bg);
+      border-color:var(--err-bd);
+      color:var(--err-tx);
     }
 
-    .status {
-      margin-top: 18px;
-      padding: 14px;
-      border-radius: 12px;
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      text-align: left;
-      font-size: 14px;
-      line-height: 1.5;
+    .status.warn{
+      background:var(--warn-bg);
+      border-color:var(--warn-bd);
+      color:var(--warn-tx);
     }
 
-    .status strong {
-      display: block;
-      margin-bottom: 6px;
+    .small{
+      margin-top:16px;
+      text-align:center;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
     }
 
-    .ok {
-      color: var(--success);
-    }
-
-    .bad {
-      color: var(--error);
-    }
-
-    .small {
-      margin-top: 16px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .loading {
-      display: inline-block;
-      width: 18px;
-      height: 18px;
-      border: 3px solid #dbe2ea;
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      vertical-align: middle;
-      margin-right: 8px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    .hidden{display:none}
   </style>
 </head>
 <body>
   <div class="wrap">
+    <h1>Asistencia v2</h1>
+    <p class="subtitle">Registra tu asistencia con verificación GPS.</p>
+
+    <div class="center">
+      <div class="badge" id="jobSiteBadge">Sitio de empleo: FIFA_IBC</div>
+    </div>
+
     <div class="card">
-      <h1>Attendance v2</h1>
-      <p class="subtitle">
-        Register your attendance with GPS verification.
-      </p>
+      <form id="attendanceForm">
+        <div class="field">
+          <input
+            id="employeeId"
+            name="employeeId"
+            type="text"
+            placeholder="Employee ID"
+            autocomplete="off"
+            required
+          />
+        </div>
 
-      <div class="site" id="jobSiteBadge">Job Site: FIFA_IBC</div>
+        <div class="field">
+          <select id="registerType" name="registerType" required>
+            <option value="">Seleccione un tipo de registro</option>
+            <option value="Clock In">Clock In</option>
+            <option value="Meal In">Meal In</option>
+            <option value="Meal Out">Meal Out</option>
+            <option value="Clock Out">Clock Out</option>
+          </select>
+        </div>
 
-      <input id="employeeId" type="text" placeholder="Employee ID" />
-      
-      <select id="registerType">
-        <option value="">Select register type</option>
-        <option value="Clock In">Clock In</option>
-        <option value="Meal In">Meal In</option>
-        <option value="Meal Out">Meal Out</option>
-        <option value="Clock Out">Clock Out</option>
-      </select>
+        <button id="submitBtn" type="submit">Enviar asistencia</button>
+      </form>
 
-      <button id="submitBtn" class="btn btn-primary" type="button">
-        Submit Attendance
-      </button>
-
-      <button id="installBtn" class="btn btn-secondary" type="button" hidden>
-        Install App
-      </button>
-
-      <div id="status" class="status">
-        <strong>Ready</strong>
-        Enter Employee ID, choose register type, and tap <b>Submit Attendance</b>.
+      <div id="statusBox" class="status warn">
+        <strong>Listo</strong><br>
+        Ingrese el ID del empleado, elija el tipo de caja registradora y toque <strong>Enviar asistencia</strong>.
       </div>
 
       <div class="small">
-        iPhone: use Safari and optionally <b>Agregar a inicio</b>.<br>
-        Android: use Chrome and optionally <b>Install app</b>.
+        iPhone: usa Safari y opcionalmente <strong>Agregar a inicio</strong>.<br>
+        Android: usa Chrome y opcionalmente <strong>Instalar app</strong>.
       </div>
     </div>
   </div>
 
   <script>
-    // =========================
-    // CONFIGURATION
-    // =========================
+    const scriptUrl = "PEGA_AQUI_TU_WEB_APP_URL_DE_APPS_SCRIPT";
     const jobSite = "FIFA_IBC";
 
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbztk4XuFvDk5-tlFirTu_PEF129i7BCjhz11je18i-I3YgoKVS6PeH2Ds7KtBZs0glv/exec";
-    // =========================
-
+    const form = document.getElementById("attendanceForm");
     const employeeIdInput = document.getElementById("employeeId");
-    const registerTypeInput = document.getElementById("registerType");
+    const registerTypeSelect = document.getElementById("registerType");
     const submitBtn = document.getElementById("submitBtn");
-    const installBtn = document.getElementById("installBtn");
-    const statusBox = document.getElementById("status");
+    const statusBox = document.getElementById("statusBox");
     const jobSiteBadge = document.getElementById("jobSiteBadge");
 
-    let deferredPrompt = null;
+    jobSiteBadge.textContent = "Sitio de empleo: " + jobSite;
 
-    jobSiteBadge.textContent = "Job Site: " + jobSite;
-
-    function setStatus(title, message, type = "") {
-      const cls = type === "error" ? "bad" : type === "success" ? "ok" : "";
-      statusBox.innerHTML = `
-        <strong class="${cls}">${title}</strong>
-        ${message}
-      `;
-    }
-
-    function setSubmitting(isSubmitting) {
-      submitBtn.disabled = isSubmitting;
-      submitBtn.textContent = isSubmitting ? "Submitting..." : "Submit Attendance";
+    function setStatus(title, message, type) {
+      statusBox.className = "status " + (type || "warn");
+      statusBox.innerHTML = "<strong>" + title + "</strong><br>" + message;
     }
 
     function getLocation() {
       return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
-          reject(new Error("This device or browser does not support geolocation."));
+          reject(new Error("Geolocation is not supported on this device."));
           return;
         }
 
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-
-            if (
-              latitude == null ||
-              longitude == null ||
-              isNaN(latitude) ||
-              isNaN(longitude)
-            ) {
-              reject(new Error("GPS was not captured correctly."));
-              return;
-            }
-
-            resolve({ latitude, longitude });
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            });
           },
           (error) => {
-            let msg = "Could not get location.";
-            if (error.code === 1) msg = "Location permission was denied.";
-            if (error.code === 2) msg = "Location is unavailable.";
-            if (error.code === 3) msg = "Location request timed out.";
+            let msg = "No fue posible obtener la ubicación.";
+            if (error.code === 1) msg = "Permiso de ubicación denegado.";
+            if (error.code === 2) msg = "Ubicación no disponible.";
+            if (error.code === 3) msg = "La solicitud de ubicación expiró.";
             reject(new Error(msg));
           },
           {
             enableHighAccuracy: true,
-            timeout: 25000,
+            timeout: 20000,
             maximumAge: 0
           }
         );
       });
     }
 
-    async function submitAttendance() {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
       const employeeId = employeeIdInput.value.trim();
-      const registerType = registerTypeInput.value;
+      const registerType = registerTypeSelect.value;
 
       if (!employeeId) {
-        setStatus("Missing data", "Please enter Employee ID.", "error");
+        setStatus("Falta ID", "Ingrese el ID del empleado.", "err");
         return;
       }
 
       if (!registerType) {
-        setStatus("Missing data", "Please select register type.", "error");
+        setStatus("Falta tipo", "Seleccione el tipo de registro.", "err");
         return;
       }
+
+      if (!scriptUrl || scriptUrl.includes("PEGA_AQUI")) {
+        setStatus("Falta configuración", "Debe pegar la URL publicada de Google Apps Script en index.html.", "err");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      setStatus("Procesando", "Obteniendo ubicación y enviando asistencia...", "warn");
 
       try {
-        setSubmitting(true);
-        setStatus(
-          "Getting location...",
-          `<span class="loading"></span>Please allow GPS access if prompted.`
-        );
-
         const loc = await getLocation();
 
+        const formData = new FormData();
+        formData.append("employeeId", employeeId);
+        formData.append("registerType", registerType);
+        formData.append("jobSite", jobSite);
+        formData.append("latitude", String(loc.latitude));
+        formData.append("longitude", String(loc.longitude));
+        formData.append("userAgent", navigator.userAgent);
+
+        await fetch(scriptUrl, {
+          method: "POST",
+          body: formData
+        });
+
         setStatus(
-          "Sending...",
-          "Saving attendance record."
+          "Guardado",
+          "La asistencia fue enviada correctamente.",
+          "ok"
         );
 
-        const payload = {
-          employeeId,
-          registerType,
-          jobSite,
-          latitude: loc.latitude,
-          longitude: loc.longitude,
-          userAgent: navigator.userAgent
-        };
-
-        const response = await fetch(scriptUrl, {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify(payload)
-        });
-        
-        
- const response = await fetch(scriptUrl, {
-  method: "POST",
-  mode: "no-cors",
-  body: JSON.stringify(payload)
-});
-
-setStatus(
-  "Saved",
-  "Attendance registered successfully.",
-  "success"
-);
-employeeIdInput.value = "";
-registerTypeInput.value = "";
+        form.reset();
       } catch (err) {
-        setStatus("Error", err.message, "error");
-      } finally {
-        setSubmitting(false);
-      }
-    }
-
-    submitBtn.addEventListener("click", submitAttendance);
-
-    // Android install prompt
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.hidden = false;
-    });
-
-    installBtn.addEventListener("click", async () => {
-      if (!deferredPrompt) {
         setStatus(
-          "Install option not available",
-          "Use your browser menu and choose Install app or Add to Home screen."
+          "Error",
+          err && err.message ? err.message : "No fue posible enviar la asistencia.",
+          "err"
         );
-        return;
+      } finally {
+        submitBtn.disabled = false;
       }
-
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = null;
-      installBtn.hidden = true;
     });
 
-    window.addEventListener("appinstalled", () => {
-      installBtn.hidden = true;
-      setStatus(
-        "App installed",
-        "The app was added successfully.",
-        "success"
-      );
-    });
-
-    // Service worker
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./service-worker.js").catch((err) => {
-          console.log("Service worker registration failed:", err);
-        });
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("service-worker.js");
       });
     }
   </script>
