@@ -1,59 +1,78 @@
-function doGet(e) {
-  return ContentService
-    .createTextOutput("Apps Script activo")
-    .setMimeType(ContentService.MimeType.TEXT);
-}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test Attendance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
 
-function doPost(e) {
-  try {
-    Logger.log("=== NUEVA PETICIÓN ===");
+<body style="font-family: Arial; padding:20px;">
 
-    if (!e) {
-      Logger.log("ERROR: e es null");
-      return ContentService.createTextOutput("NO EVENT");
+  <h1 style="color:red;">VERSION TEST 123</h1>
+
+  <p>Prueba directa de envío a Apps Script</p>
+
+  <input id="emp" placeholder="Employee ID" style="width:100%; padding:10px; margin-bottom:10px;" />
+
+  <select id="type" style="width:100%; padding:10px; margin-bottom:10px;">
+    <option value="Clock In">Clock In</option>
+    <option value="Meal In">Meal In</option>
+    <option value="Meal Out">Meal Out</option>
+    <option value="Clock Out">Clock Out</option>
+  </select>
+
+  <button onclick="send()" style="width:100%; padding:15px;">
+    ENVIAR
+  </button>
+
+  <p id="msg"></p>
+
+<script>
+
+const scriptUrl = "https://script.google.com/macros/s/AKfycbx3Z4j4hQVxlD9H7w4Fb85tTrl0Hx25uWfs4pM63UIQgTMRiKVOxL-RKSqWyTsC-q5q/exec";
+
+function send() {
+
+  const emp = document.getElementById("emp").value;
+  const type = document.getElementById("type").value;
+
+  document.getElementById("msg").innerHTML = "Enviando...";
+
+  navigator.geolocation.getCurrentPosition(async function(pos){
+
+    const formData = new FormData();
+    formData.append("employeeId", emp);
+    formData.append("registerType", type);
+    formData.append("jobSite", "TEST");
+    formData.append("latitude", pos.coords.latitude);
+    formData.append("longitude", pos.coords.longitude);
+    formData.append("userAgent", navigator.userAgent);
+
+    try {
+
+      await fetch(scriptUrl, {
+        method: "POST",
+        mode: "no-cors",
+        body: formData
+      });
+
+      document.getElementById("msg").innerHTML = "ENVIADO";
+
+    } catch(e) {
+
+      document.getElementById("msg").innerHTML = "ERROR: " + e;
+
     }
 
-    Logger.log("e.parameter: " + JSON.stringify(e.parameter));
+  }, function(err){
 
-    const ss = SpreadsheetApp.openById("1OI-UvI3MasxAn2px0Q_cwp1Q9RWWX2Hn_rr6LHg_zFA");
-    const sheet = ss.getSheetByName("AttendanceLog");
+    document.getElementById("msg").innerHTML = "ERROR GPS";
 
-    Logger.log("Sheet encontrada: " + sheet.getName());
+  });
 
-    const employeeId = e.parameter.employeeId || "";
-    const registerType = e.parameter.registerType || "";
-    const jobSite = e.parameter.jobSite || "";
-    const latitude = e.parameter.latitude || "";
-    const longitude = e.parameter.longitude || "";
-    const userAgent = e.parameter.userAgent || "";
-    const gps = latitude && longitude ? latitude + "," + longitude : "";
-
-    Logger.log("Datos:");
-    Logger.log(employeeId + " | " + registerType + " | " + jobSite);
-    Logger.log(latitude + "," + longitude);
-
-    sheet.appendRow([
-      new Date(),
-      employeeId,
-      registerType,
-      jobSite,
-      gps,
-      latitude,
-      longitude,
-      userAgent
-    ]);
-
-    Logger.log("Fila insertada");
-
-    return ContentService
-      .createTextOutput("OK")
-      .setMimeType(ContentService.MimeType.TEXT);
-
-  } catch (err) {
-    Logger.log("ERROR: " + err.message);
-
-    return ContentService
-      .createTextOutput("ERROR: " + err.message)
-      .setMimeType(ContentService.MimeType.TEXT);
-  }
 }
+
+</script>
+
+</body>
+</html>
