@@ -33,19 +33,15 @@ self.addEventListener("fetch", event => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // No interceptar POST
   if (req.method !== "GET") {
     return;
   }
 
-  // No interceptar otros dominios, como Google Forms
   if (url.origin !== self.location.origin) {
     return;
   }
 
   event.respondWith(
-    caches.match(req).then(cached => {
-      return cached || fetch(req);
-    })
+    caches.match(req).then(cached => cached || fetch(req))
   );
 });
