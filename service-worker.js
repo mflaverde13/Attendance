@@ -1,4 +1,4 @@
-const CACHE_NAME = "attendance-v3";
+const CACHE_NAME = "attendance-cache-v2";
 const URLS_TO_CACHE = [
   "/Attendance/",
   "/Attendance/index.html",
@@ -8,10 +8,10 @@ const URLS_TO_CACHE = [
 ];
 
 self.addEventListener("install", event => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(URLS_TO_CACHE))
   );
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
@@ -30,7 +30,22 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
+  const req = event.request;
+  const url = new URL(req.url);
+
+  // No interceptar POST
+  if (req.method !== "GET") {
+    return;
+  }
+
+  // No interceptar otros dominios, como Google Forms
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    caches.match(req).then(cached => {
+      return cached || fetch(req);
+    })
   );
 });
