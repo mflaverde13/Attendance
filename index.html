@@ -79,6 +79,18 @@
       font-size: 14px;
     }
 
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+      background: #fff;
+    }
+
     .btn {
       display: inline-block;
       width: 100%;
@@ -89,7 +101,7 @@
       font-weight: bold;
       cursor: pointer;
       transition: 0.2s ease;
-      margin-top: 10px;
+      margin-top: 12px;
     }
 
     .btn-primary {
@@ -109,6 +121,11 @@
 
     .btn[hidden] {
       display: none !important;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .status {
@@ -169,8 +186,18 @@
 
       <div class="site" id="jobSiteBadge">Job Site: FIFA_IBC</div>
 
-      <button id="startBtn" class="btn btn-primary" type="button">
-        Start Check-In
+      <input id="employeeId" type="text" placeholder="Employee ID" />
+      
+      <select id="registerType">
+        <option value="">Select register type</option>
+        <option value="Clock In">Clock In</option>
+        <option value="Meal In">Meal In</option>
+        <option value="Meal Out">Meal Out</option>
+        <option value="Clock Out">Clock Out</option>
+      </select>
+
+      <button id="submitBtn" class="btn btn-primary" type="button">
+        Submit Attendance
       </button>
 
       <button id="installBtn" class="btn btn-secondary" type="button" hidden>
@@ -179,32 +206,30 @@
 
       <div id="status" class="status">
         <strong>Ready</strong>
-        Tap <b>Start Check-In</b> to continue.
+        Enter Employee ID, choose register type, and tap <b>Submit Attendance</b>.
       </div>
 
       <div class="small">
-        iPhone: after opening this page in Safari, you can use
-        <b>Agregar a inicio</b>.<br>
-        Android: use Chrome menu and choose <b>Install app</b> or
-        <b>Add to Home screen</b>.
+        iPhone: use Safari and optionally <b>Agregar a inicio</b>.<br>
+        Android: use Chrome and optionally <b>Install app</b>.
       </div>
     </div>
   </div>
 
   <script>
-    // ===== CONFIGURATION =====
+    // =========================
+    // CONFIGURATION
+    // =========================
     const jobSite = "FIFA_IBC";
 
-    const formBase =
-      "https://docs.google.com/forms/d/e/1FAIpQLSf2AZWEs5ol805qQ4J10YPc9Z0FWjDYgfT4Ei8QTin_mx5PqA/viewform?usp=pp_url";
-
-    const entryJobSite = "entry.2092010849";
-    const entryGPS = "entry.148691752";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbztk4XuFvDk5-tlFirTu_PEF129i7BCjhz11je18i-I3YgoKVS6PeH2Ds7KtBZs0glv/exec";
     // =========================
 
-    const statusBox = document.getElementById("status");
-    const startBtn = document.getElementById("startBtn");
+    const employeeIdInput = document.getElementById("employeeId");
+    const registerTypeInput = document.getElementById("registerType");
+    const submitBtn = document.getElementById("submitBtn");
     const installBtn = document.getElementById("installBtn");
+    const statusBox = document.getElementById("status");
     const jobSiteBadge = document.getElementById("jobSiteBadge");
 
     let deferredPrompt = null;
@@ -219,69 +244,121 @@
       `;
     }
 
-    function buildFormUrl(lat, lon) {
-      const gps = lat + "," + lon;
-      return (
-        formBase +
-        "&" + entryJobSite + "=" + encodeURIComponent(jobSite) +
-        "&" + entryGPS + "=" + encodeURIComponent(gps)
-      );
+    function setSubmitting(isSubmitting) {
+      submitBtn.disabled = isSubmitting;
+      submitBtn.textContent = isSubmitting ? "Submitting..." : "Submit Attendance";
     }
 
-    function goToForm(lat, lon) {
-      const url = buildFormUrl(lat, lon);
-      window.location.href = url;
-    }
+    function getLocation() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error("This device or browser does not support geolocation."));
+          return;
+        }
 
-    function requestLocation() {
-      if (!navigator.geolocation) {
-        setStatus(
-          "Geolocation not available",
-          "This device or browser does not support location services.",
-          "error"
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            if (
+              latitude == null ||
+              longitude == null ||
+              isNaN(latitude) ||
+              isNaN(longitude)
+            ) {
+              reject(new Error("GPS was not captured correctly."));
+              return;
+            }
+
+            resolve({ latitude, longitude });
+          },
+          (error) => {
+            let msg = "Could not get location.";
+            if (error.code === 1) msg = "Location permission was denied.";
+            if (error.code === 2) msg = "Location is unavailable.";
+            if (error.code === 3) msg = "Location request timed out.";
+            reject(new Error(msg));
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 25000,
+            maximumAge: 0
+          }
         );
+      });
+    }
+
+    async function submitAttendance() {
+      const employeeId = employeeIdInput.value.trim();
+      const registerType = registerTypeInput.value;
+
+      if (!employeeId) {
+        setStatus("Missing data", "Please enter Employee ID.", "error");
         return;
       }
 
-      setStatus(
-        "Getting location...",
-        `<span class="loading"></span>Please allow location access if prompted.`
-      );
+      if (!registerType) {
+        setStatus("Missing data", "Please select register type.", "error");
+        return;
+      }
 
-      navigator.geolocation.getCurrentPosition(
-        function(position) {
+      try {
+        setSubmitting(true);
+        setStatus(
+          "Getting location...",
+          `<span class="loading"></span>Please allow GPS access if prompted.`
+        );
+
+        const loc = await getLocation();
+
+        setStatus(
+          "Sending...",
+          "Saving attendance record."
+        );
+
+        const payload = {
+          employeeId,
+          registerType,
+          jobSite,
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          userAgent: navigator.userAgent
+        };
+
+        const response = await fetch(scriptUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
           setStatus(
-            "Location captured",
-            "Opening attendance form...",
+            "Saved",
+            "Attendance registered successfully.",
             "success"
           );
-          goToForm(position.coords.latitude, position.coords.longitude);
-        },
-        function(error) {
-          let message = "Could not get your location.";
-
-          if (error.code === 1) {
-            message =
-              "Location permission was denied. Please allow location access and try again.";
-          } else if (error.code === 2) {
-            message =
-              "Location is unavailable. Please make sure GPS is enabled and try again.";
-          } else if (error.code === 3) {
-            message =
-              "Location request timed out. Please try again.";
-          }
-
-          setStatus("Location error", message, "error");
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 20000,
-          maximumAge: 0
+          employeeIdInput.value = "";
+          registerTypeInput.value = "";
+        } else {
+          setStatus(
+            "Error",
+            result.error || "Could not save attendance.",
+            "error"
+          );
         }
-      );
+      } catch (err) {
+        setStatus("Error", err.message, "error");
+      } finally {
+        setSubmitting(false);
+      }
     }
 
-    startBtn.addEventListener("click", requestLocation);
+    submitBtn.addEventListener("click", submitAttendance);
 
     // Android install prompt
     window.addEventListener("beforeinstallprompt", (e) => {
