@@ -5,12 +5,10 @@
   <title>Test Attendance</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-
 <body style="font-family: Arial; padding:20px;">
 
-  <h1 style="color:red;">VERSION TEST 123</h1>
-
-  <p>Prueba directa de envío a Apps Script</p>
+  <h1 style="color:red;">VERSION TEST FORM 124</h1>
+  <p>Prueba directa por formulario HTML a Apps Script</p>
 
   <input id="emp" placeholder="Employee ID" style="width:100%; padding:10px; margin-bottom:10px;" />
 
@@ -21,57 +19,56 @@
     <option value="Clock Out">Clock Out</option>
   </select>
 
-  <button onclick="send()" style="width:100%; padding:15px;">
+  <button onclick="sendForm()" style="width:100%; padding:15px;">
     ENVIAR
   </button>
 
   <p id="msg"></p>
 
+  <form id="postForm"
+        action="https://script.google.com/macros/s/AKfycbx3Z4j4hQVxlD9H7w4Fb85tTrl0Hx25uWfs4pM63UIQgTMRiKVOxL-RKSqWyTsC-q5q/exec"
+        method="POST"
+        target="hidden_iframe">
+    <input type="hidden" name="employeeId" id="f_employeeId">
+    <input type="hidden" name="registerType" id="f_registerType">
+    <input type="hidden" name="jobSite" id="f_jobSite" value="TEST">
+    <input type="hidden" name="latitude" id="f_latitude">
+    <input type="hidden" name="longitude" id="f_longitude">
+    <input type="hidden" name="userAgent" id="f_userAgent">
+  </form>
+
+  <iframe name="hidden_iframe" style="display:none;"></iframe>
+
 <script>
-
-const scriptUrl = "https://script.google.com/macros/s/AKfycbx3Z4j4hQVxlD9H7w4Fb85tTrl0Hx25uWfs4pM63UIQgTMRiKVOxL-RKSqWyTsC-q5q/exec";
-
-function send() {
-
-  const emp = document.getElementById("emp").value;
+function sendForm() {
+  const emp = document.getElementById("emp").value.trim();
   const type = document.getElementById("type").value;
 
-  document.getElementById("msg").innerHTML = "Enviando...";
+  if (!emp) {
+    document.getElementById("msg").innerHTML = "Falta Employee ID";
+    return;
+  }
 
-  navigator.geolocation.getCurrentPosition(async function(pos){
+  document.getElementById("msg").innerHTML = "Obteniendo GPS...";
 
-    const formData = new FormData();
-    formData.append("employeeId", emp);
-    formData.append("registerType", type);
-    formData.append("jobSite", "TEST");
-    formData.append("latitude", pos.coords.latitude);
-    formData.append("longitude", pos.coords.longitude);
-    formData.append("userAgent", navigator.userAgent);
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    document.getElementById("f_employeeId").value = emp;
+    document.getElementById("f_registerType").value = type;
+    document.getElementById("f_latitude").value = pos.coords.latitude;
+    document.getElementById("f_longitude").value = pos.coords.longitude;
+    document.getElementById("f_userAgent").value = navigator.userAgent;
 
-    try {
+    document.getElementById("msg").innerHTML = "Enviando formulario...";
+    document.getElementById("postForm").submit();
 
-      await fetch(scriptUrl, {
-        method: "POST",
-        mode: "no-cors",
-        body: formData
-      });
+    setTimeout(function() {
+      document.getElementById("msg").innerHTML = "Formulario enviado. Revisa AttendanceLog.";
+    }, 1500);
 
-      document.getElementById("msg").innerHTML = "ENVIADO";
-
-    } catch(e) {
-
-      document.getElementById("msg").innerHTML = "ERROR: " + e;
-
-    }
-
-  }, function(err){
-
+  }, function() {
     document.getElementById("msg").innerHTML = "ERROR GPS";
-
   });
-
 }
-
 </script>
 
 </body>
